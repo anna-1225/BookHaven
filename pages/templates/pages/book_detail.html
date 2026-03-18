@@ -1,0 +1,35 @@
+{% extends 'pages/base.html' %}
+{% load book_tags %}
+
+{% block breadcrumbs %} 
+    › <a href="{% url 'genres' %}">Жанры</a>
+    › <a href="{% url 'genre_detail' genre_slug %}">{{ genre_name }}</a>
+    › {{ book.title|truncatechars:30 }}
+{% endblock %}
+
+{% block content %}
+    <h2>{{ book.title }}</h2>
+    <p><strong>Автор:</strong> {{ book.author }}</p>
+    <p><strong>Год:</strong> {{ book.year }}</p>
+    <p><strong>Рейтинг:</strong> {% book_rating_stars book.rating %}</p>
+    
+    <h3>О книге</h3>
+    {% autoescape off %}
+        <p>{{ book.description|linebreaks }}</p>
+    {% endautoescape %}
+    
+    <h3>Комментарии</h3>
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="comment">
+                <p><strong>{{ comment.author }}</strong> ({{ comment.date }})</p>
+                <p>{{ comment.text|linebreaks }}</p>
+                {% if comment.id|divisibleby:"2" %}
+                    <p>❤️ {{ comment.likes }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Комментариев нет</p>
+    {% endif %}
+{% endblock %}

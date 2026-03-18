@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-0qgb_xcp$as^n)i4qoa0woesn40(o4pto%-^-)y@4vq6dpi-20'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True  # Изменено на True для разработки
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'books',
     'pages',
-
 ]
 
 MIDDLEWARE = [
@@ -57,8 +56,10 @@ ROOT_URLCONF = 'bookhaven.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [
+            BASE_DIR / 'templates',  # Добавлено для общих шаблонов проекта
+        ],
+        'APP_DIRS': True,  # Поиск шаблонов в папках templates приложений
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -106,9 +107,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'  # Изменено на русский
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'  # Изменена временная зона
 
 USE_I18N = True
 
@@ -120,7 +121,23 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Дополнительные пути для поиска статических файлов
+STATICFILES_DIRS = [
+    BASE_DIR / 'pages' / 'static',  # Статика приложения pages
+    BASE_DIR / 'books' / 'static',  # Статика приложения books
+    BASE_DIR / 'static',            # Общая статика проекта
+]
+
+# Папка для сбора статики командой collectstatic
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Настройки для режима отладки
+if DEBUG:
+    # Разрешаем загрузку статики в режиме отладки
+    import mimetypes
+    mimetypes.add_type("text/css", ".css", True)

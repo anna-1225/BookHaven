@@ -1,0 +1,16 @@
+{% extends 'pages/base.html' %}
+
+{% block breadcrumbs %} › Жанры{% endblock %}
+
+{% block content %}
+    <ul class="genres-list">
+    {% for genre in genres %}
+        <li>
+            <a href="{% url 'genre_detail' genre.slug %}">
+                {{ genre.name|upper }}
+            </a>
+            ({{ genre.book_count }} книг)
+        </li>
+    {% endfor %}
+    </ul>
+{% endblock %}

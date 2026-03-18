@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+{% load static %}
+{% load book_tags %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}BookHaven{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'pages/css/style.css' %}">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="container">
+                <div class="header__inner">
+                    <a href="{% url 'home' %}" class="logo">BookHaven</a>
+                    <nav>
+                        <ul class="menu">
+                            <li><a href="{% url 'home' %}">Главная</a></li>
+                            <li><a href="{% url 'genres' %}">Жанры</a></li>
+                        </ul>
+                    </nav>
+                    <div class="header__info">
+                        Онлайн: {{ online_users }}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main">
+            <div class="container">
+                <div class="content-wrapper">
+                    <!-- Боковая панель -->
+                    <aside class="sidebar">
+                        <div class="sidebar__section">
+                            <h3 class="sidebar__title">Жанры</h3>
+                            <ul class="sidebar__menu">
+                                <li class="{% if selected_genre == 0 %}selected{% endif %}">
+                                    <a href="{% url 'genres' %}">Все жанры</a>
+                                </li>
+                                {% for genre in genres %}
+                                    <li class="{% if genre.id == selected_genre %}selected{% endif %}">
+                                        <a href="{% url 'genre_detail' genre.slug %}">
+                                            {{ genre.name }} ({{ genre.book_count }})
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <div class="sidebar__section">
+                            <h3 class="sidebar__title">Статистика</h3>
+                            <div>Книг: {{ total_books }}</div>
+                            <div>Пользователей: {{ total_users }}</div>
+                        </div>
+                    </aside>
+
+                    <!-- Контент страницы -->
+                    <section class="content">
+                        <!-- Хлебные крошки -->
+                        <div class="breadcrumbs">
+                            <a href="{% url 'home' %}">Главная</a>
+                            {% block breadcrumbs %}{% endblock %}
+                        </div>
+
+                        <h1 class="page-title">{{ title }}</h1>
+
+                        {% block content %}{% endblock %}
+                    </section>
+                </div>
+            </div>
+        </main>
+
+        <!-- Подвал -->
+        <footer class="footer">
+            <div class="container">
+                &copy; {% now "Y" %} BookHaven
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

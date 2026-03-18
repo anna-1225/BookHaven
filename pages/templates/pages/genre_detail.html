@@ -1,0 +1,25 @@
+{% extends 'pages/base.html' %}
+{% load book_tags %}
+
+{% block breadcrumbs %} 
+    › <a href="{% url 'genres' %}">Жанры</a>
+    › {{ genre_name }}
+{% endblock %}
+
+{% block content %}
+    {% if books %}
+        <ul>
+        {% for book in books %}
+            <li>
+                <h3><a href="{% url 'book_detail' genre_slug book.id %}">{{ book.title }}</a></h3>
+                <p>Автор: {{ book.author }}, {{ book.year }}</p>
+                <p>Рейтинг: {% book_rating_stars book.rating %}</p>
+                <p>{{ book.description|truncatewords:20 }}</p>
+                {% if not forloop.last %}<hr>{% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет книг в этом жанре</p>
+    {% endif %}
+{% endblock %}

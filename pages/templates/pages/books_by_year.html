@@ -1,0 +1,24 @@
+{% extends 'pages/base.html' %}
+{% load book_tags %}
+
+{% block breadcrumbs %} › {{ pub_year }} год{% endblock %}
+
+{% block content %}
+    <h2>Книги {{ pub_year }} года</h2>
+    
+    {% if books %}
+        <ul>
+        {% for book in books %}
+            <li>
+                <a href="{% url 'book_detail' book.genre_slug book.id %}">
+                    {{ book.title }}
+                </a>
+                - {{ book.author }}
+                ({% book_rating_stars book.rating %})
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Книг {{ pub_year }} года не найдено</p>
+    {% endif %}
+{% endblock %}
