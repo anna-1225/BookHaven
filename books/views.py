@@ -13,7 +13,7 @@ BOOKS = {
     'fantasy': [
         {'id': 1, 'title': 'Властелин колец', 'author': 'Дж.Р.Р. Толкин',
          'year': 1954, 'rating': 4.9, 'genre_slug': 'fantasy',
-         'description': 'Эпическая сага о борьбе добра со злом в Средиземье.'},
+         'description': 'Великая эпопея о войне за Средиземье. Хоббит Фродо Бэггинс получает задание уничтожить Кольцо Всевластья, дарующее власть Тёмному Властелину Саурону. Вместе с отрядом союзников он отправляется в опасный путь через Мордор к Роковой Горе, чтобы уничтожить артефакт и спасти мир от тьмы.'},
         {'id': 2, 'title': 'Игра престолов', 'author': 'Джордж Мартин',
          'year': 1996, 'rating': 4.8, 'genre_slug': 'fantasy',
          'description': 'Политические интриги и войны за власть в Вестеросе.'},
@@ -37,8 +37,6 @@ BOOKS = {
 
 
 def index(request):
-    """Главная страница"""
-    # Собираем все книги для отображения на главной
     all_posts = []
     for genre_slug, books_list in BOOKS.items():
         for book in books_list:
@@ -46,7 +44,7 @@ def index(request):
 
     context = {
         'title': 'Главная страница книжного форума BookHaven',
-        'posts': all_posts[:3],  # первые 3 книги
+        'posts': all_posts[:3],
         'genres': GENRES,
         'online_users': 42,
         'selected_genre': 0,
@@ -57,7 +55,6 @@ def index(request):
 
 
 def genres_list(request):
-    """Страница со списком литературных жанров"""
     context = {
         'title': 'Литературные жанры',
         'genres': GENRES,
@@ -70,12 +67,10 @@ def genres_list(request):
 
 
 def genre_detail(request, genre_slug):
-    """Страница книг определенного жанра"""
     valid_genres = ['fantasy', 'detective', 'classic', 'romance']
     if genre_slug not in valid_genres:
         raise Http404("Жанр не найден")
 
-    # Находим жанр по slug
     genre = next((g for g in GENRES if g['slug'] == genre_slug), None)
     books = BOOKS.get(genre_slug, [])
 
@@ -94,36 +89,29 @@ def genre_detail(request, genre_slug):
 
 
 def book_detail(request, genre_slug, book_id):
-    """Страница конкретной книги"""
     if int(book_id) > 10:
         raise Http404("Книга не найдена")
 
     comment_id = request.GET.get('comment_id', '')
 
-    print(f"[DEBUG] GET-параметр comment_id = {comment_id}")
-    print(f"[DEBUG] Все GET-параметры: {request.GET}")
 
-    # Получаем информацию о книге
     books = BOOKS.get(genre_slug, [])
     book = next((b for b in books if b['id'] == int(book_id)), None)
 
     if not book:
         raise Http404("Книга не найдена")
 
-    # Находим жанр
     genre = next((g for g in GENRES if g['slug'] == genre_slug), None)
 
-    # Комментарии
     COMMENTS = [
-        {'id': 1, 'author': 'BookLover', 'date': '2024-01-15 14:30',
+        {'id': 1, 'author': 'BookLover', 'date': '2026-01-15 14:30',
          'text': 'Отличная книга! Очень понравилось обсуждение на форуме.', 'likes': 5},
-        {'id': 2, 'author': 'Reader123', 'date': '2024-01-16 09:45',
-         'text': 'Очень понравилось обсуждение. Много интересных мыслей.', 'likes': 3},
-        {'id': 3, 'author': 'BookWorm', 'date': '2024-01-16 18:20',
-         'text': 'Жду продолжения! Когда будет следующая встреча клуба?', 'likes': 2},
+        {'id': 2, 'author': 'Reader123', 'date': '2026-01-16 09:45',
+         'text': 'Очень понравилось обсуждение.', 'likes': 3},
+        {'id': 3, 'author': 'BookWorm', 'date': '2026-01-16 18:20',
+         'text': 'Жду продолжения!', 'likes': 2},
     ]
 
-    # Фильтруем комментарии если указан comment_id
     filtered_comments = COMMENTS
     if comment_id:
         filtered_comments = [c for c in COMMENTS if c['id'] == int(comment_id)]
@@ -144,16 +132,13 @@ def book_detail(request, genre_slug, book_id):
 
 
 def old_catalog_redirect(request):
-    """Редирект со старого каталога"""
     return redirect('genres')
 
 
 def books_by_year(request, pub_year):
-    """Книги, изданные в определенном году"""
     if pub_year <= 0:
         return redirect('home')
 
-    # Собираем все книги, изданные в указанном году
     books_in_year = []
     for genre_slug, books_list in BOOKS.items():
         for book in books_list:

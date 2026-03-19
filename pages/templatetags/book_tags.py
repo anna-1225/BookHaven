@@ -19,22 +19,18 @@ POPULAR_BOOKS = [
 
 @register.simple_tag
 def current_time(format_string='%H:%M'):
-    """Текущее время"""
     return timezone.now().strftime(format_string)
 
 @register.simple_tag
 def book_rating_stars(rating):
-    """Звезды рейтинга (возвращает безопасный HTML)"""
     full = int(rating)
     half = 1 if rating - full >= 0.5 else 0
     empty = 5 - full - half
     stars = '★' * full + '½' * half + '☆' * empty
-    # mark_safe помечает строку как безопасный HTML
     return mark_safe(f'<span class="rating-stars">{stars}</span>')
 
 @register.simple_tag
 def get_random_books(count=3):
-    """Случайные книги"""
     if count > len(POPULAR_BOOKS):
         count = len(POPULAR_BOOKS)
     return random.sample(POPULAR_BOOKS, count)

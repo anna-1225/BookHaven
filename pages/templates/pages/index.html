@@ -6,7 +6,6 @@
         <p>Добро пожаловать на книжный форум!</p>
     </div>
 
-    <!-- Книги дня -->
     <h2 class="section-title">Книги дня</h2>
     {% get_random_books 3 as daily_books %}
     <div class="books-grid">
@@ -24,7 +23,6 @@
         {% endfor %}
     </div>
 
-    <!-- Последние обсуждения -->
     <h2 class="section-title">Последние обсуждения</h2>
     {% if posts %}
         <div class="posts-list">

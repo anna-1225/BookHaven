@@ -57,9 +57,9 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',  # Добавлено для общих шаблонов проекта
+            BASE_DIR / 'templates',
         ],
-        'APP_DIRS': True,  # Поиск шаблонов в папках templates приложений
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -74,8 +74,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'bookhaven.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -85,8 +83,6 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -104,40 +100,32 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'ru-ru'  # Изменено на русский
 
-TIME_ZONE = 'Europe/Moscow'  # Изменена временная зона
+LANGUAGE_CODE = 'ru-ru'
+
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+
 
 STATIC_URL = 'static/'
 
-# Дополнительные пути для поиска статических файлов
 STATICFILES_DIRS = [
-    BASE_DIR / 'pages' / 'static',  # Статика приложения pages
-    BASE_DIR / 'books' / 'static',  # Статика приложения books
-    BASE_DIR / 'static',            # Общая статика проекта
+    BASE_DIR / 'pages' / 'static',
+    BASE_DIR / 'books' / 'static',
+    BASE_DIR / 'static',
 ]
 
-# Папка для сбора статики командой collectstatic
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Настройки для режима отладки
 if DEBUG:
-    # Разрешаем загрузку статики в режиме отладки
     import mimetypes
     mimetypes.add_type("text/css", ".css", True)
