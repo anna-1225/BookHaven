@@ -1,24 +1,22 @@
 {% extends 'pages/base.html' %}
 {% load book_tags %}
 
-{% block breadcrumbs %} › {{ pub_year }} год{% endblock %}
-
 {% block content %}
-    <h2>Книги {{ pub_year }} года</h2>
-    
+    <h1>{{ title }}</h1>
+
     {% if books %}
         <ul>
-        {% for book in books %}
-            <li>
-                <a href="{% url 'book_detail' book.genre_slug book.id %}">
-                    {{ book.title }}
-                </a>
-                - {{ book.author }}
-                ({% book_rating_stars book.rating %})
-            </li>
-        {% endfor %}
+            {% for book in books %}
+                <li>
+                    <a href="{% url 'book_detail' book.slug %}">{{ book.title }}</a>
+                    - {{ book.author }} ({{ book.year }})
+                    <span>Рейтинг: {% book_rating_stars book.rating %}</span>
+                </li>
+            {% endfor %}
         </ul>
     {% else %}
-        <p>Книг {{ pub_year }} года не найдено</p>
+        <p>Книг {{ pub_year }} года не найдено.</p>
     {% endif %}
+
+    <p><a href="{% url 'home' %}">На главную</a></p>
 {% endblock %}

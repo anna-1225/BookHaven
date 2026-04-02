@@ -7,19 +7,21 @@
     </div>
 
     <h2 class="section-title">Книги дня</h2>
-    {% get_random_books 3 as daily_books %}
     <div class="books-grid">
-        {% for book in daily_books %}
+        {% for book in posts %}
             <div class="book-card">
                 <h3 class="book-card__title">
-                    <a href="{% url 'book_detail' book.genre book.id %}">{{ book.title }}</a>
+                    <a href="{% url 'book_detail' book.slug %}">{{ book.title }}</a>
                 </h3>
                 <p class="book-card__author">{{ book.author }}</p>
+                <p class="book-card__year">Год: {{ book.year }}</p>
                 <p class="book-card__rating">
                     Рейтинг: {% book_rating_stars book.rating %}
                 </p>
-                <a href="{% url 'book_detail' book.genre book.id %}" class="btn btn-small">Подробнее</a>
+                <a href="{% url 'book_detail' book.slug %}" class="btn">Подробнее</a>
             </div>
+        {% empty %}
+            <p>Книги пока не добавлены</p>
         {% endfor %}
     </div>
 
@@ -30,7 +32,7 @@
                 <div class="post-item">
                     <h3 class="post-title">{{ post.title }}</h3>
                     <p class="post-meta">{{ post.author }}, {{ post.year }}</p>
-                    <a href="{% url 'book_detail' post.genre_slug post.id %}" class="btn">Читать</a>
+                    <a href="{% url 'book_detail' post.slug %}" class="btn">Читать</a>
                 </div>
                 {% if not forloop.last %}<hr>{% endif %}
             {% endfor %}
