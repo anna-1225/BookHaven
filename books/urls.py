@@ -8,7 +8,9 @@ urlpatterns = [
     path('', views.index, name='home'),
     path('genres/', views.genres_list, name='genres'),
     path('genre/<slug:genre_slug>/', views.genre_detail, name='genre_detail'),
-    path('book/<slug:book_slug>/', views.book_detail, name='book_detail'),  # только slug!
+    path('book/<slug:book_slug>/', views.book_detail, name='book_detail'),
     path('year/<year:pub_year>/', views.books_by_year, name='books_by_year'),
     path('old-catalog/', views.old_catalog_redirect, name='old_catalog'),
+    path('category/<slug:cat_slug>/', views.show_category, name='category'),
+    path('tag/<slug:tag_slug>/', views.show_tag, name='tag'),
 ]

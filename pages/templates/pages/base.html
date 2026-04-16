@@ -4,24 +4,26 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}BookHaven{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BookHaven - Книжный форум{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'pages/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="wrapper">
-        <!-- Шапка -->
+        <!-- Шапка сайта -->
         <header class="header">
             <div class="container">
                 <div class="header__inner">
                     <a href="{% url 'home' %}" class="logo">BookHaven</a>
-                    <nav>
+                    <nav class="nav">
                         <ul class="menu">
-                            <li><a href="{% url 'home' %}">Главная</a></li>
-                            <li><a href="{% url 'genres' %}">Жанры</a></li>
+                            <li class="menu__item"><a href="{% url 'home' %}" class="menu__link">Главная</a></li>
+                            <li class="menu__item"><a href="{% url 'genres' %}" class="menu__link">Жанры</a></li>
                         </ul>
                     </nav>
                     <div class="header__info">
-                        Онлайн: {{ online_users }}
+                        Онлайн: {{ online_users|default:"42" }}
                     </div>
                 </div>
             </div>
@@ -33,40 +35,68 @@
                 <div class="content-wrapper">
                     <!-- Боковая панель -->
                     <aside class="sidebar">
+                        <!-- Блок категорий -->
                         <div class="sidebar__section">
-                            <h3 class="sidebar__title">Жанры</h3>
+                            <h3 class="sidebar__title">Категории</h3>
                             <ul class="sidebar__menu">
-                                <li class="{% if selected_genre == 0 %}selected{% endif %}">
-                                    <a href="{% url 'genres' %}">Все жанры</a>
+                                <li class="{% if selected_category == 0 %}selected{% endif %}">
+                                    <a href="{% url 'home' %}">Все категории</a>
                                 </li>
-                                {% for genre in genres %}
-                                    <li class="{% if genre.id == selected_genre %}selected{% endif %}">
-                                        <a href="{% url 'genre_detail' genre.slug %}">
-                                            {{ genre.name }} ({{ genre.book_count }})
+                                {% for category in categories %}
+                                    <li class="{% if category.id == selected_category %}selected{% endif %}">
+                                        <a href="{% url 'category' category.slug %}">
+                                            {{ category.name }}
                                         </a>
                                     </li>
                                 {% endfor %}
                             </ul>
                         </div>
 
+                        <!-- Блок тегов -->
+                        <div class="sidebar__section">
+                            <h3 class="sidebar__title">Теги</h3>
+                            <ul class="sidebar__menu">
+                                {% for tag in tags %}
+                                    <li><a href="{% url 'tag' tag.slug %}">{{ tag.tag }}</a></li>
+                                {% empty %}
+                                    <li>Теги не добавлены</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <!-- Блок статистики -->
                         <div class="sidebar__section">
                             <h3 class="sidebar__title">Статистика</h3>
-                            <div>Книг: {{ total_books }}</div>
-                            <div>Пользователей: {{ total_users }}</div>
+                            <div class="forum-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Книг в базе:</span>
+                                    <span class="stat-value">{{ total_books }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Пользователей:</span>
+                                    <span class="stat-value">{{ total_users }}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Сейчас онлайн:</span>
+                                    <span class="stat-value">{{ online_users }}</span>
+                                </div>
+                            </div>
                         </div>
                     </aside>
 
                     <!-- Контент страницы -->
                     <section class="content">
-                        <!-- Хлебные крошки -->
-                        <div class="breadcrumbs">
-                            <a href="{% url 'home' %}">Главная</a>
-                            {% block breadcrumbs %}{% endblock %}
-                        </div>
+                        {% block breadcrumbs %}
+                            <div class="breadcrumbs">
+                                <a href="{% url 'home' %}">Главная</a>
+                                {% block extra_breadcrumbs %}{% endblock %}
+                            </div>
+                        {% endblock %}
 
                         <h1 class="page-title">{{ title }}</h1>
 
-                        {% block content %}{% endblock %}
+                        {% block content %}
+                        {% endblock %}
                     </section>
                 </div>
             </div>
@@ -75,9 +105,22 @@
         <!-- Подвал -->
         <footer class="footer">
             <div class="container">
-                &copy; {% now "Y" %} BookHaven
+                <div class="footer__inner">
+                    <div class="footer__copyright">
+                        &copy; {% now "Y" %} BookHaven. Все права защищены.
+                    </div>
+                    <div class="footer__menu">
+                        <a href="#">О проекте</a>
+                        <a href="#">Правила</a>
+                        <a href="#">Помощь</a>
+                        <a href="#">Контакты</a>
+                    </div>
+                </div>
             </div>
         </footer>
     </div>
+
+    <script src="{% static 'pages/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

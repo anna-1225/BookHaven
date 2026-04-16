@@ -1,6 +1,6 @@
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
-from pages.models import Book
+from pages.models import Book, Category, TagPost
 
 GENRES = [
     {'id': 1, 'name': 'Фэнтези', 'slug': 'fantasy', 'book_count': 45},
@@ -12,14 +12,17 @@ GENRES = [
 
 def index(request):
     books = Book.published.all()[:3]
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
     total_books = Book.published.count()
 
     context = {
         'title': 'Главная страница книжного форума BookHaven',
         'posts': books,
-        'genres': GENRES,
+        'categories': categories,
+        'tags': tags,
         'online_users': 42,
-        'selected_genre': 0,
+        'selected_category': 0,
         'total_books': total_books,
         'total_users': 1234,
     }
@@ -28,12 +31,16 @@ def index(request):
 
 def genres_list(request):
     total_books = Book.published.count()
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
 
     context = {
         'title': 'Литературные жанры',
         'genres': GENRES,
+        'categories': categories,
+        'tags': tags,
         'online_users': 42,
-        'selected_genre': 0,
+        'selected_category': 0,
         'total_books': total_books,
         'total_users': 1234,
     }
@@ -48,6 +55,8 @@ def genre_detail(request, genre_slug):
     genre = next((g for g in GENRES if g['slug'] == genre_slug), None)
     books = Book.published.filter(genre=genre_slug)
     total_books = Book.published.count()
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
 
     context = {
         'title': f'Книги жанра {genre["name"]}',
@@ -55,8 +64,10 @@ def genre_detail(request, genre_slug):
         'genre_slug': genre_slug,
         'books': books,
         'genres': GENRES,
+        'categories': categories,
+        'tags': tags,
         'online_users': 42,
-        'selected_genre': genre['id'],
+        'selected_category': genre['id'],
         'total_books': total_books,
         'total_users': 1234,
     }
@@ -83,6 +94,8 @@ def book_detail(request, book_slug):
 
     genre = next((g for g in GENRES if g['slug'] == book.genre), None)
     total_books = Book.published.count()
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
 
     context = {
         'title': f'{book.title}',
@@ -90,8 +103,10 @@ def book_detail(request, book_slug):
         'book': book,
         'comments': filtered_comments,
         'genres': GENRES,
+        'categories': categories,
+        'tags': tags,
         'online_users': 42,
-        'selected_genre': genre['id'] if genre else 0,
+        'selected_category': genre['id'] if genre else 0,
         'total_books': total_books,
         'total_users': 1234,
     }
@@ -108,15 +123,59 @@ def books_by_year(request, pub_year):
 
     books_in_year = Book.published.filter(year=pub_year)
     total_books = Book.published.count()
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
 
     context = {
         'title': f'Книги {pub_year} года',
         'pub_year': pub_year,
         'books': books_in_year,
         'genres': GENRES,
+        'categories': categories,
+        'tags': tags,
         'online_users': 42,
-        'selected_genre': 0,
+        'selected_category': 0,
         'total_books': total_books,
         'total_users': 1234,
     }
     return render(request, 'pages/books_by_year.html', context)
+
+
+def show_category(request, cat_slug):
+    category = get_object_or_404(Category, slug=cat_slug)
+    books = Book.published.filter(cat=category)
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
+    total_books = Book.published.count()
+
+    context = {
+        'title': f'Книги жанра: {category.name}',
+        'posts': books,
+        'categories': categories,
+        'tags': tags,
+        'selected_category': category.pk,
+        'total_books': total_books,
+        'total_users': 1234,
+        'online_users': 42,
+    }
+    return render(request, 'pages/index.html', context)
+
+
+def show_tag(request, tag_slug):
+    tag = get_object_or_404(TagPost, slug=tag_slug)
+    books = tag.books.filter(is_published=Book.Status.PUBLISHED)
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
+    total_books = Book.published.count()
+
+    context = {
+        'title': f'Тег: {tag.tag}',
+        'posts': books,
+        'categories': categories,
+        'tags': tags,
+        'selected_category': 0,
+        'total_books': total_books,
+        'total_users': 1234,
+        'online_users': 42,
+    }
+    return render(request, 'pages/index.html', context)
