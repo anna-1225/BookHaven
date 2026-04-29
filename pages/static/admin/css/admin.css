@@ -1,0 +1,247 @@
+
+:root {
+    --dark: #1a1a1a;
+    --darker: #0d0d0d;
+    --gray: #2d2d2d;
+    --light-gray: #3a3a3a;
+    --accent: #3498db;
+    --accent-dark: #2980b9;
+    --white: #ffffff;
+    --text-light: #cccccc;
+    --text-lighter: #999999;
+}
+
+body {
+    background: var(--dark) !important;
+    color: var(--text-light) !important;
+}
+
+#header {
+    background: var(--darker) !important;
+    color: var(--white) !important;
+    padding: 15px 25px !important;
+    border-bottom: 1px solid var(--gray) !important;
+}
+
+#site-name a {
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    color: var(--white) !important;
+    text-decoration: none !important;
+}
+
+#site-name a:hover {
+    color: var(--accent) !important;
+}
+
+#user-tools {
+    color: var(--text-lighter) !important;
+}
+
+#user-tools a {
+    color: var(--accent) !important;
+}
+
+div.breadcrumbs {
+    background: var(--gray) !important;
+    color: var(--text-light) !important;
+    padding: 8px 25px !important;
+    border-bottom: 1px solid var(--light-gray) !important;
+}
+
+div.breadcrumbs a {
+    color: var(--accent) !important;
+}
+
+#content {
+    background: var(--gray) !important;
+    padding: 20px !important;
+    margin: 20px !important;
+    border-radius: 8px !important;
+}
+
+h1, h2, h3, h4 {
+    color: var(--white) !important;
+}
+
+.module h2, .module caption, .inline-group h2 {
+    background: var(--darker) !important;
+    color: var(--white) !important;
+    padding: 10px 15px !important;
+    border-radius: 6px !important;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: var(--accent) !important;
+    color: var(--white) !important;
+    border: none !important;
+    padding: 8px 18px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    background: var(--accent-dark) !important;
+}
+
+a:link, a:visited {
+    color: var(--accent) !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    color: var(--accent-dark) !important;
+    text-decoration: underline !important;
+}
+
+#nav-sidebar {
+    background: var(--gray) !important;
+    border-radius: 8px !important;
+    margin: 20px 0 20px 20px !important;
+    border: 1px solid var(--light-gray) !important;
+}
+
+#nav-sidebar .section {
+    font-weight: bold !important;
+    color: var(--white) !important;
+    border-bottom: 1px solid var(--light-gray) !important;
+}
+
+#nav-sidebar .current a {
+    background: var(--accent) !important;
+    color: var(--white) !important;
+}
+
+#nav-sidebar a {
+    color: var(--text-light) !important;
+    padding: 8px 15px !important;
+    display: block !important;
+}
+
+#nav-sidebar a:hover {
+    background: var(--light-gray) !important;
+    color: var(--accent) !important;
+}
+
+
+.results table {
+    background: var(--gray) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.results table th {
+    background: var(--darker) !important;
+    color: var(--white) !important;
+    padding: 12px !important;
+}
+
+.results table td {
+    padding: 10px !important;
+    border-bottom: 1px solid var(--light-gray) !important;
+    color: var(--text-light) !important;
+}
+
+.results table tr:hover {
+    background: var(--light-gray) !important;
+}
+
+#changelist-filter {
+    background: var(--gray) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--light-gray) !important;
+}
+
+#changelist-filter h2 {
+    background: var(--darker) !important;
+    color: var(--white) !important;
+}
+
+#changelist-filter a {
+    color: var(--text-light) !important;
+}
+
+#changelist-filter a:hover {
+    color: var(--accent) !important;
+}
+
+#changelist-filter .selected a {
+    color: var(--accent) !important;
+    font-weight: bold !important;
+}
+
+#searchbar {
+    background: var(--light-gray) !important;
+    border: 1px solid var(--gray) !important;
+    border-radius: 5px !important;
+    padding: 8px 12px !important;
+    color: var(--white) !important;
+}
+
+#searchbar:focus {
+    border-color: var(--accent) !important;
+    outline: none !important;
+}
+
+.paginator {
+    background: var(--gray) !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    margin-top: 20px !important;
+    color: var(--text-light) !important;
+}
+
+.paginator a:link, .paginator a:visited {
+    background: var(--light-gray) !important;
+    color: var(--white) !important;
+    padding: 5px 12px !important;
+    border-radius: 5px !important;
+}
+
+.paginator a:hover {
+    background: var(--accent) !important;
+}
+
+.paginator .this-page {
+    background: var(--accent) !important;
+    color: var(--white) !important;
+    padding: 5px 12px !important;
+    border-radius: 5px !important;
+}
+
+.actions select {
+    background: var(--light-gray) !important;
+    border: 1px solid var(--gray) !important;
+    border-radius: 5px !important;
+    padding: 5px !important;
+    color: var(--white) !important;
+}
+
+.messagelist li {
+    border-radius: 6px !important;
+    padding: 12px 15px !important;
+}
+
+.messagelist li.success {
+    background: #27ae60 !important;
+    color: var(--white) !important;
+}
+
+.messagelist li.warning {
+    background: #f39c12 !important;
+    color: var(--white) !important;
+}
+
+.messagelist li.error {
+    background: #e74c3c !important;
+    color: var(--white) !important;
+}
+
+#footer {
+    background: var(--darker) !important;
+    color: var(--text-lighter) !important;
+    padding: 15px !important;
+    text-align: center !important;
+    margin-top: 20px !important;
+}

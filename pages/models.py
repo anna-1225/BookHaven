@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.utils.text import slugify
 from django.contrib.auth.models import User
 
 
@@ -7,36 +8,6 @@ class PublishedManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(is_published=Book.Status.PUBLISHED)
 
-
-class Book(models.Model):
-    slug = models.SlugField(max_length=255, unique=True, db_index=True)
-    class Status(models.IntegerChoices):
-        DRAFT = 0, 'Черновик'
-        PUBLISHED = 1, 'Опубликовано'
-
-    title = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, db_index=True)
-    author = models.CharField(max_length=255)
-    content = models.TextField(blank=True)
-    genre = models.CharField(max_length=50, blank=True, default='')
-    year = models.IntegerField(default=2000)
-    rating = models.FloatField(default=0.0)
-    time_create = models.DateTimeField(auto_now_add=True)
-    time_update = models.DateTimeField(auto_now=True)
-    is_published = models.BooleanField(choices=Status.choices, default=Status.DRAFT)
-    cat = models.ForeignKey('Category', on_delete=models.PROTECT, related_name='books', verbose_name="Категория")
-    tags = models.ManyToManyField('TagPost', blank=True, related_name='books', verbose_name="Теги")
-
-    objects = models.Manager()
-    published = PublishedManager()
-
-    def __str__(self):
-        return self.title
-
-    def get_absolute_url(self):
-        return reverse('book_detail', kwargs={'book_slug': self.slug})
-    class Meta:
-        ordering = ['-time_create']
 
 class Category(models.Model):
     name = models.CharField(max_length=100, db_index=True, verbose_name="Название")
@@ -49,8 +20,8 @@ class Category(models.Model):
         return reverse('category', kwargs={'cat_slug': self.slug})
 
     class Meta:
-        verbose_name = "Категория"
-        verbose_name_plural = "Категории"
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class TagPost(models.Model):
@@ -64,9 +35,47 @@ class TagPost(models.Model):
         return reverse('tag', kwargs={'tag_slug': self.slug})
 
     class Meta:
-        verbose_name = "Тег"
-        verbose_name_plural = "Теги"
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
 
+
+class Book(models.Model):
+    class Status(models.IntegerChoices):
+        DRAFT = 0, 'Черновик'
+        PUBLISHED = 1, 'Опубликовано'
+
+    title = models.CharField(max_length=255, verbose_name="Название")
+    slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
+    author = models.CharField(max_length=255, verbose_name="Автор")
+    content = models.TextField(blank=True, verbose_name="Описание")
+    genre = models.CharField(max_length=50, blank=True, default='', verbose_name="Жанр")
+    year = models.IntegerField(default=2000, verbose_name="Год издания")
+    rating = models.FloatField(default=0.0, verbose_name="Рейтинг")
+    time_create = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
+    time_update = models.DateTimeField(auto_now=True, verbose_name="Время обновления")
+    is_published = models.IntegerField(choices=Status.choices, default=Status.DRAFT, verbose_name="Статус")
+
+    cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True, related_name='books', verbose_name="Категория")
+    tags = models.ManyToManyField(TagPost, blank=True, related_name='books', verbose_name="Теги")
+
+    objects = models.Manager()
+    published = PublishedManager()
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('book_detail', kwargs={'book_slug': self.slug})
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-time_create']
+        verbose_name = 'Книга'
+        verbose_name_plural = 'Книги'
 
 
 class Profile(models.Model):
@@ -78,5 +87,5 @@ class Profile(models.Model):
         return f"Профиль пользователя {self.user.username}"
 
     class Meta:
-        verbose_name = "Профиль"
-        verbose_name_plural = "Профили"
+        verbose_name = 'Профиль'
+        verbose_name_plural = 'Профили'
