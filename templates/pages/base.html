@@ -20,6 +20,7 @@
                         <ul class="menu">
                             <li class="menu__item"><a href="{% url 'home' %}" class="menu__link">Главная</a></li>
                             <li class="menu__item"><a href="{% url 'genres' %}" class="menu__link">Жанры</a></li>
+                            <li><a href="{% url 'all_books' %}">Все книги</a></li>
                         </ul>
                     </nav>
                     <div class="header__info">
@@ -29,13 +30,10 @@
             </div>
         </header>
 
-        <!-- Основной контент -->
         <main class="main">
             <div class="container">
                 <div class="content-wrapper">
-                    <!-- Боковая панель -->
                     <aside class="sidebar">
-                        <!-- Блок категорий -->
                         <div class="sidebar__section">
                             <h3 class="sidebar__title">Категории</h3>
                             <ul class="sidebar__menu">
@@ -52,7 +50,6 @@
                             </ul>
                         </div>
 
-                        <!-- Блок тегов -->
                         <div class="sidebar__section">
                             <h3 class="sidebar__title">Теги</h3>
                             <ul class="sidebar__menu">
@@ -64,7 +61,6 @@
                             </ul>
                         </div>
 
-                        <!-- Блок статистики -->
                         <div class="sidebar__section">
                             <h3 class="sidebar__title">Статистика</h3>
                             <div class="forum-stats">
@@ -84,7 +80,6 @@
                         </div>
                     </aside>
 
-                    <!-- Контент страницы -->
                     <section class="content">
                         {% block breadcrumbs %}
                             <div class="breadcrumbs">
@@ -102,7 +97,6 @@
             </div>
         </main>
 
-        <!-- Подвал -->
         <footer class="footer">
             <div class="container">
                 <div class="footer__inner">

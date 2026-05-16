@@ -44,6 +44,12 @@ class Book(models.Model):
         DRAFT = 0, 'Черновик'
         PUBLISHED = 1, 'Опубликовано'
 
+    photo = models.ImageField(
+        upload_to='books_photos/%Y/%m/%d/',
+        blank=True,
+        null=True,
+        verbose_name="Изображение книги")
+
     title = models.CharField(max_length=255, verbose_name="Название")
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
     author = models.CharField(max_length=255, verbose_name="Автор")

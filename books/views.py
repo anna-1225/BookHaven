@@ -1,6 +1,11 @@
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from pages.models import Book, Category, TagPost
+from pages.forms import AddBookForm, BookModelForm, UploadFileForm
+import uuid
+import os
+from django.conf import settings
+
 
 GENRES = [
     {'id': 1, 'name': 'Фэнтези', 'slug': 'fantasy', 'book_count': 45},
@@ -113,34 +118,6 @@ def book_detail(request, book_slug):
     return render(request, 'pages/book_detail.html', context)
 
 
-def old_catalog_redirect(request):
-    return redirect('genres')
-
-
-def books_by_year(request, pub_year):
-    if pub_year <= 0:
-        return redirect('home')
-
-    books_in_year = Book.published.filter(year=pub_year)
-    total_books = Book.published.count()
-    categories = Category.objects.all()
-    tags = TagPost.objects.all()
-
-    context = {
-        'title': f'Книги {pub_year} года',
-        'pub_year': pub_year,
-        'books': books_in_year,
-        'genres': GENRES,
-        'categories': categories,
-        'tags': tags,
-        'online_users': 42,
-        'selected_category': 0,
-        'total_books': total_books,
-        'total_users': 1234,
-    }
-    return render(request, 'pages/books_by_year.html', context)
-
-
 def show_category(request, cat_slug):
     category = get_object_or_404(Category, slug=cat_slug)
     books = Book.published.filter(cat=category)
@@ -179,3 +156,136 @@ def show_tag(request, tag_slug):
         'online_users': 42,
     }
     return render(request, 'pages/index.html', context)
+
+
+def books_by_year(request, pub_year):
+    if pub_year <= 0:
+        return redirect('home')
+
+    books_in_year = Book.published.filter(year=pub_year)
+    total_books = Book.published.count()
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
+
+    context = {
+        'title': f'Книги {pub_year} года',
+        'pub_year': pub_year,
+        'books': books_in_year,
+        'genres': GENRES,
+        'categories': categories,
+        'tags': tags,
+        'online_users': 42,
+        'selected_category': 0,
+        'total_books': total_books,
+        'total_users': 1234,
+    }
+    return render(request, 'pages/books_by_year.html', context)
+
+
+def old_catalog_redirect(request):
+    return redirect('genres')
+
+
+def add_book(request):
+    if request.method == 'POST':
+        form = AddBookForm(request.POST)
+        if form.is_valid():
+            try:
+                Book.objects.create(
+                    title=form.cleaned_data['title'],
+                    slug=form.cleaned_data['slug'],
+                    author=form.cleaned_data['author'],
+                    content=form.cleaned_data['content'],
+                    year=form.cleaned_data['year'],
+                    rating=form.cleaned_data['rating'] or 0,
+                    is_published=form.cleaned_data['is_published'],
+                    cat=form.cleaned_data['cat']
+                )
+                return redirect('home')
+            except Exception as e:
+                form.add_error(None, f'Ошибка: {str(e)}')
+    else:
+        form = AddBookForm()
+    return render(request, 'pages/add_book.html', {'form': form, 'title': 'Добавление книги'})
+
+
+def add_book_model(request):
+    if request.method == 'POST':
+        form = BookModelForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = BookModelForm()
+
+    return render(request, 'pages/add_book.html', {
+        'title': 'Добавление книги',
+        'form': form
+    })
+
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            uploaded_file = request.FILES['file']
+            import os
+            from django.conf import settings
+            upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = os.path.join(upload_dir, uploaded_file.name)
+            with open(file_path, 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+            return render(request, 'pages/upload_success.html', {'file_name': uploaded_file.name})
+    else:
+        form = UploadFileForm()
+    return render(request, 'pages/upload_file.html', {'form': form, 'title': 'Загрузка файла'})
+
+def all_books(request):
+    books = Book.published.all()
+    categories = Category.objects.all()
+    tags = TagPost.objects.all()
+    total_books = books.count()
+
+    context = {
+        'title': 'Все книги',
+        'posts': books,
+        'categories': categories,
+        'tags': tags,
+        'online_users': 42,
+        'selected_category': 0,
+        'total_books': total_books,
+        'total_users': 1234,
+    }
+    return render(request, 'pages/all_books.html', context)
+
+
+def handle_uploaded_file(f):
+    ext = os.path.splitext(f.name)[1]
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    file_path = os.path.join(settings.MEDIA_ROOT, 'uploads', unique_name)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+
+    return f"uploads/{unique_name}"
+
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file_path = handle_uploaded_file(request.FILES['file'])
+            return render(request, 'pages/upload_success.html', {
+                'file_path': file_path,
+                'file_name': request.FILES['file'].name
+            })
+    else:
+        form = UploadFileForm()
+
+    return render(request, 'pages/upload_file.html', {
+        'title': 'Загрузка файла',
+        'form': form
+    })

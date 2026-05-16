@@ -1,8 +1,8 @@
 from django.contrib import admin
-
-from django.contrib import admin
-from .models import Book, Category, TagPost
 from django.contrib import messages
+from django.utils.safestring import mark_safe
+from .models import Book, Category, TagPost
+
 
 class RatingFilter(admin.SimpleListFilter):
     title = 'Рейтинг'
@@ -24,6 +24,7 @@ class RatingFilter(admin.SimpleListFilter):
             return queryset.filter(rating__lt=3.0)
         return queryset
 
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug')
@@ -44,19 +45,19 @@ class TagPostAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'year', 'rating', 'cat', 'is_published', 'short_content', 'book_info')
+    list_display = ('title', 'author', 'year', 'rating', 'cat', 'is_published', 'get_photo')
     list_display_links = ('title',)
     list_editable = ('rating', 'is_published')
     list_filter = ('cat', 'is_published', 'year', RatingFilter)
     search_fields = ('title', 'author', 'cat__name')
     ordering = ('-time_create',)
     list_per_page = 10
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('time_create', 'time_update', 'get_photo')
+    # ДОБАВЛЯЕМ photo в fields
+    fields = ('title', 'slug', 'author', 'content', 'year', 'rating', 'cat', 'tags', 'photo', 'get_photo', 'is_published', 'time_create', 'time_update')
     filter_horizontal = ('tags',)
     actions = ['make_published', 'make_draft']
-    fields = ('title', 'slug', 'author', 'content', 'year', 'rating', 'cat', 'tags', 'is_published', 'time_create', 'time_update')
-    readonly_fields = ('time_create', 'time_update')
-    prepopulated_fields = {'slug': ('title',)}
-    filter_horizontal = ('tags',)
 
     @admin.display(description="Краткое содержание")
     def short_content(self, book: Book):
@@ -68,6 +69,12 @@ class BookAdmin(admin.ModelAdmin):
     def book_info(self, book: Book):
         return f"{book.title} ({book.year}) - {book.author}"
 
+    @admin.display(description="Изображение")
+    def get_photo(self, book: Book):
+        if book.photo:
+            return mark_safe(f'<img src="{book.photo.url}" width="50" height="50" style="object-fit: cover; border-radius: 4px;">')
+        return "Нет фото"
+
     @admin.action(description="Опубликовать выбранные книги")
     def make_published(self, request, queryset):
         count = queryset.update(is_published=Book.Status.PUBLISHED)
@@ -77,4 +84,3 @@ class BookAdmin(admin.ModelAdmin):
     def make_draft(self, request, queryset):
         count = queryset.update(is_published=Book.Status.DRAFT)
         self.message_user(request, f"{count} книг(и) сняты с публикации.", messages.WARNING)
-

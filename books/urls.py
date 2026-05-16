@@ -13,4 +13,8 @@ urlpatterns = [
     path('old-catalog/', views.old_catalog_redirect, name='old_catalog'),
     path('category/<slug:cat_slug>/', views.show_category, name='category'),
     path('tag/<slug:tag_slug>/', views.show_tag, name='tag'),
+    path('add-book/', views.add_book, name='add_book'),
+    path('add-book-model/', views.add_book_model, name='add_book_model'),
+    path('upload/', views.upload_file, name='upload_file'),
+    path('all-books/', views.all_books, name='all_books'),
 ]

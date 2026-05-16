@@ -10,6 +10,9 @@
     <div class="books-grid">
         {% for book in posts %}
             <div class="book-card">
+                {% if book.photo %}
+                    <img src="{{ book.photo.url }}" alt="{{ book.title }}" width="120" height="160" style="width: 120px; height: 160px; object-fit: cover; border-radius: 5px; display: block; margin-left: auto; margin-right: auto;">
+                {% endif %}
                 <h3 class="book-card__title">
                     <a href="{% url 'book_detail' book.slug %}">{{ book.title }}</a>
                 </h3>

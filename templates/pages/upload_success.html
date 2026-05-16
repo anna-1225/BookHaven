@@ -1,0 +1,8 @@
+{% extends 'pages/base.html' %}
+
+{% block content %}
+<h1>Файл успешно загружен!</h1>
+<p>Имя файла: {{ file_name }}</p>
+<a href="{% url 'upload_file' %}">Загрузить еще файл</a>
+<a href="{% url 'home' %}">На главную</a>
+{% endblock %}
