@@ -1,10 +1,13 @@
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
+
 from pages.models import Book, Category, TagPost
 from pages.forms import AddBookForm, BookModelForm, UploadFileForm
-import uuid
-import os
-from django.conf import settings
+from pages.utils import DataMixin
 
 
 GENRES = [
@@ -13,25 +16,6 @@ GENRES = [
     {'id': 3, 'name': 'Классика', 'slug': 'classic', 'book_count': 28},
     {'id': 4, 'name': 'Роман', 'slug': 'romance', 'book_count': 37},
 ]
-
-
-def index(request):
-    books = Book.published.all()[:3]
-    categories = Category.objects.all()
-    tags = TagPost.objects.all()
-    total_books = Book.published.count()
-
-    context = {
-        'title': 'Главная страница книжного форума BookHaven',
-        'posts': books,
-        'categories': categories,
-        'tags': tags,
-        'online_users': 42,
-        'selected_category': 0,
-        'total_books': total_books,
-        'total_users': 1234,
-    }
-    return render(request, 'pages/index.html', context)
 
 
 def genres_list(request):
@@ -79,85 +63,6 @@ def genre_detail(request, genre_slug):
     return render(request, 'pages/genre_detail.html', context)
 
 
-def book_detail(request, book_slug):
-    book = get_object_or_404(Book, slug=book_slug, is_published=Book.Status.PUBLISHED)
-
-    comment_id = request.GET.get('comment_id', '')
-
-    COMMENTS = [
-        {'id': 1, 'author': 'BookLover', 'date': '2026-01-15 14:30',
-         'text': 'Отличная книга! Очень понравилось обсуждение на форуме.', 'likes': 5},
-        {'id': 2, 'author': 'Reader123', 'date': '2026-01-16 09:45',
-         'text': 'Очень понравилось обсуждение.', 'likes': 3},
-        {'id': 3, 'author': 'BookWorm', 'date': '2026-01-16 18:20',
-         'text': 'Жду продолжения!', 'likes': 2},
-    ]
-
-    filtered_comments = COMMENTS
-    if comment_id:
-        filtered_comments = [c for c in COMMENTS if c['id'] == int(comment_id)]
-
-    genre = next((g for g in GENRES if g['slug'] == book.genre), None)
-    total_books = Book.published.count()
-    categories = Category.objects.all()
-    tags = TagPost.objects.all()
-
-    context = {
-        'title': f'{book.title}',
-        'genre_name': genre['name'] if genre else book.genre,
-        'book': book,
-        'comments': filtered_comments,
-        'genres': GENRES,
-        'categories': categories,
-        'tags': tags,
-        'online_users': 42,
-        'selected_category': genre['id'] if genre else 0,
-        'total_books': total_books,
-        'total_users': 1234,
-    }
-    return render(request, 'pages/book_detail.html', context)
-
-
-def show_category(request, cat_slug):
-    category = get_object_or_404(Category, slug=cat_slug)
-    books = Book.published.filter(cat=category)
-    categories = Category.objects.all()
-    tags = TagPost.objects.all()
-    total_books = Book.published.count()
-
-    context = {
-        'title': f'Книги жанра: {category.name}',
-        'posts': books,
-        'categories': categories,
-        'tags': tags,
-        'selected_category': category.pk,
-        'total_books': total_books,
-        'total_users': 1234,
-        'online_users': 42,
-    }
-    return render(request, 'pages/index.html', context)
-
-
-def show_tag(request, tag_slug):
-    tag = get_object_or_404(TagPost, slug=tag_slug)
-    books = tag.books.filter(is_published=Book.Status.PUBLISHED)
-    categories = Category.objects.all()
-    tags = TagPost.objects.all()
-    total_books = Book.published.count()
-
-    context = {
-        'title': f'Тег: {tag.tag}',
-        'posts': books,
-        'categories': categories,
-        'tags': tags,
-        'selected_category': 0,
-        'total_books': total_books,
-        'total_users': 1234,
-        'online_users': 42,
-    }
-    return render(request, 'pages/index.html', context)
-
-
 def books_by_year(request, pub_year):
     if pub_year <= 0:
         return redirect('home')
@@ -182,46 +87,25 @@ def books_by_year(request, pub_year):
     return render(request, 'pages/books_by_year.html', context)
 
 
+class AllBooks(DataMixin, ListView):
+    model = Book
+    template_name = 'pages/all_books.html'
+    context_object_name = 'posts'
+    paginate_by = 6
+
+    def get_queryset(self):
+        return Book.published.all().select_related('cat')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Все книги'
+        context['selected_category'] = 0
+        context['total_books'] = Book.published.count()
+        return context
+
+
 def old_catalog_redirect(request):
     return redirect('genres')
-
-
-def add_book(request):
-    if request.method == 'POST':
-        form = AddBookForm(request.POST)
-        if form.is_valid():
-            try:
-                Book.objects.create(
-                    title=form.cleaned_data['title'],
-                    slug=form.cleaned_data['slug'],
-                    author=form.cleaned_data['author'],
-                    content=form.cleaned_data['content'],
-                    year=form.cleaned_data['year'],
-                    rating=form.cleaned_data['rating'] or 0,
-                    is_published=form.cleaned_data['is_published'],
-                    cat=form.cleaned_data['cat']
-                )
-                return redirect('home')
-            except Exception as e:
-                form.add_error(None, f'Ошибка: {str(e)}')
-    else:
-        form = AddBookForm()
-    return render(request, 'pages/add_book.html', {'form': form, 'title': 'Добавление книги'})
-
-
-def add_book_model(request):
-    if request.method == 'POST':
-        form = BookModelForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
-    else:
-        form = BookModelForm()
-
-    return render(request, 'pages/add_book.html', {
-        'title': 'Добавление книги',
-        'form': form
-    })
 
 
 def upload_file(request):
@@ -231,9 +115,12 @@ def upload_file(request):
             uploaded_file = request.FILES['file']
             import os
             from django.conf import settings
+            import uuid
+            ext = os.path.splitext(uploaded_file.name)[1]
+            unique_name = f"{uuid.uuid4().hex}{ext}"
             upload_dir = os.path.join(settings.MEDIA_ROOT, 'uploads')
             os.makedirs(upload_dir, exist_ok=True)
-            file_path = os.path.join(upload_dir, uploaded_file.name)
+            file_path = os.path.join(upload_dir, unique_name)
             with open(file_path, 'wb+') as destination:
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
@@ -242,50 +129,139 @@ def upload_file(request):
         form = UploadFileForm()
     return render(request, 'pages/upload_file.html', {'form': form, 'title': 'Загрузка файла'})
 
-def all_books(request):
-    books = Book.published.all()
-    categories = Category.objects.all()
-    tags = TagPost.objects.all()
-    total_books = books.count()
 
-    context = {
-        'title': 'Все книги',
-        'posts': books,
-        'categories': categories,
-        'tags': tags,
-        'online_users': 42,
-        'selected_category': 0,
-        'total_books': total_books,
-        'total_users': 1234,
-    }
-    return render(request, 'pages/all_books.html', context)
+class BookHome(DataMixin, ListView):
+    model = Book
+    template_name = 'pages/index.html'
+    context_object_name = 'posts'
+    paginate_by = 6
 
+    def get_queryset(self):
+        return Book.published.all().select_related('cat')
 
-def handle_uploaded_file(f):
-    ext = os.path.splitext(f.name)[1]
-    unique_name = f"{uuid.uuid4().hex}{ext}"
-    file_path = os.path.join(settings.MEDIA_ROOT, 'uploads', unique_name)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, 'wb+') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
-
-    return f"uploads/{unique_name}"
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Главная страница книжного форума BookHaven'
+        context['selected_category'] = 0
+        context['total_books'] = Book.published.count()
+        return context
 
 
-def upload_file(request):
-    if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file_path = handle_uploaded_file(request.FILES['file'])
-            return render(request, 'pages/upload_success.html', {
-                'file_path': file_path,
-                'file_name': request.FILES['file'].name
-            })
-    else:
-        form = UploadFileForm()
+class BookCategory(DataMixin, ListView):
+    model = Book
+    template_name = 'pages/index.html'
+    context_object_name = 'posts'
+    allow_empty = False
+    paginate_by = 6
 
-    return render(request, 'pages/upload_file.html', {
-        'title': 'Загрузка файла',
-        'form': form
-    })
+    def get_queryset(self):
+        return Book.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category = Category.objects.get(slug=self.kwargs['cat_slug'])
+        context['title'] = f'Книги жанра: {category.name}'
+        context['selected_category'] = category.pk
+        return context
+
+
+class BookTag(DataMixin, ListView):
+    model = Book
+    template_name = 'pages/index.html'
+    context_object_name = 'posts'
+    allow_empty = False
+    paginate_by = 6
+
+    def get_queryset(self):
+        return Book.published.filter(tags__slug=self.kwargs['tag_slug']).select_related('cat')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tag = TagPost.objects.get(slug=self.kwargs['tag_slug'])
+        context['title'] = f'Тег: {tag.tag}'
+        context['selected_category'] = 0
+        return context
+
+
+class ShowBook(DataMixin, DetailView):
+    model = Book
+    template_name = 'pages/book_detail.html'
+    context_object_name = 'book'
+    slug_url_kwarg = 'book_slug'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Book.published, slug=self.kwargs[self.slug_url_kwarg])
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.object.title
+        context['genre_name'] = self.object.genre
+        context['comments'] = [
+            {'id': 1, 'author': 'BookLover', 'date': '2026-01-15 14:30',
+             'text': 'Отличная книга! Очень понравилось обсуждение на форуме.', 'likes': 5},
+            {'id': 2, 'author': 'Reader123', 'date': '2026-01-16 09:45',
+             'text': 'Очень понравилось обсуждение.', 'likes': 3},
+            {'id': 3, 'author': 'BookWorm', 'date': '2026-01-16 18:20',
+             'text': 'Жду продолжения!', 'likes': 2},
+        ]
+        return context
+
+
+class AddBook(DataMixin, FormView):
+    form_class = AddBookForm
+    template_name = 'pages/add_book.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Добавление книги (несвязанная форма)'
+
+    def form_valid(self, form):
+        Book.objects.create(
+            title=form.cleaned_data['title'],
+            slug=form.cleaned_data['slug'],
+            author=form.cleaned_data['author'],
+            content=form.cleaned_data['content'],
+            year=form.cleaned_data['year'],
+            rating=form.cleaned_data['rating'] or 0,
+            is_published=form.cleaned_data['is_published'],
+            cat=form.cleaned_data['cat']
+        )
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Добавление книги (несвязанная форма)'
+        return context
+
+
+class CreateBook(DataMixin, CreateView):
+    model = Book
+    fields = ['title', 'slug', 'author', 'content', 'year', 'rating', 'is_published', 'cat', 'tags', 'photo']
+    template_name = 'pages/add_book.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Добавление книги'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Добавление книги'
+        return context
+
+
+class UpdateBook(DataMixin, UpdateView):
+    model = Book
+    fields = ['title', 'slug', 'author', 'content', 'year', 'rating', 'is_published', 'cat', 'tags', 'photo']
+    template_name = 'pages/add_book.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Редактирование книги'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Редактирование книги'
+        return context
+
+
+class DeleteBook(DataMixin, DeleteView):
+    model = Book
+    template_name = 'pages/confirm_delete.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Удаление книги'
+    slug_url_kwarg = 'slug'

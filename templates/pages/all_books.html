@@ -2,26 +2,55 @@
 {% load book_tags %}
 
 {% block content %}
-    <p>Всего книг: {{ total_books }}</p>
+<p>Всего книг: {{ total_books }}</p>
 
-    <div class="books-grid">
-        {% for book in posts %}
-            <div class="book-card">
-                {% if book.photo %}
-                    <img src="{{ book.photo.url }}" alt="{{ book.title }}" width="120" height="160" style="width: 120px; height: 160px; object-fit: cover; border-radius: 5px;">
-                {% endif %}
-                <h3 class="book-card__title">
-                    <a href="{% url 'book_detail' book.slug %}">{{ book.title }}</a>
-                </h3>
-                <p class="book-card__author">{{ book.author }}</p>
-                <p class="book-card__year">Год: {{ book.year }}</p>
-                <p class="book-card__rating">
-                    Рейтинг: {% book_rating_stars book.rating %}
-                </p>
-                <a href="{% url 'book_detail' book.slug %}" class="btn">Подробнее</a>
-            </div>
-        {% empty %}
-            <p>Книги пока не добавлены</p>
+<div class="books-grid">
+    {% for book in posts %}
+        <div class="book-card">
+            {% if book.photo %}
+                <img src="{{ book.photo.url }}" alt="{{ book.title }}" width="120" height="160" style="width: 120px; height: 160px; object-fit: cover; border-radius: 5px;">
+            {% endif %}
+            <h3 class="book-card__title">
+                <a href="{% url 'book_detail' book.slug %}">{{ book.title }}</a>
+            </h3>
+            <p class="book-card__author">{{ book.author }}</p>
+            <p class="book-card__year">Год: {{ book.year }}</p>
+            <p class="book-card__rating">
+                Рейтинг: {% book_rating_stars book.rating %}
+            </p>
+            <a href="{% url 'book_detail' book.slug %}" class="btn">Подробнее</a>
+        </div>
+    {% empty %}
+        <p>Книги пока не добавлены</p>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="list-pages">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-num">
+            <a href="?page={{ page_obj.previous_page_number }}">&lt;</a>
+        </li>
+        {% endif %}
+
+        {% for p in paginator.page_range %}
+            {% if page_obj.number == p %}
+                <li class="page-num page-num-selected">{{ p }}</li>
+            {% elif p >= page_obj.number|add:-2 and p <= page_obj.number|add:2 %}
+                <li class="page-num">
+                    <a href="?page={{ p }}">{{ p }}</a>
+                </li>
+            {% endif %}
         {% endfor %}
-    </div>
+
+        {% if page_obj.has_next %}
+        <li class="page-num">
+            <a href="?page={{ page_obj.next_page_number }}">&gt;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
 {% endblock %}
