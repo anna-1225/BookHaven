@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'books',
     'pages',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -131,5 +132,9 @@ if DEBUG:
     import mimetypes
     mimetypes.add_type("text/css", ".css", True)
 
-MEDIA_URL = '/media/'                    # Префикс URL для доступа к файлам
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+LOGIN_URL = 'users:login'

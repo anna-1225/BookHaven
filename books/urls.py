@@ -24,4 +24,5 @@ urlpatterns = [
     path('upload/', views.upload_file, name='upload_file'),
 
     path('old-catalog/', views.old_catalog_redirect, name='old_catalog'),
+    path('about/', views.AboutView.as_view(), name='about'),
 ]

@@ -265,3 +265,11 @@ class DeleteBook(DataMixin, DeleteView):
     success_url = reverse_lazy('home')
     title_page = 'Удаление книги'
     slug_url_kwarg = 'slug'
+from django.views.generic import TemplateView
+
+
+class AboutView(TemplateView):
+    template_name = 'pages/about.html'
+    extra_context = {
+        'title': 'О сайте',
+    }
