@@ -8,6 +8,8 @@ from django.urls import reverse_lazy
 from pages.models import Book, Category, TagPost
 from pages.forms import AddBookForm, BookModelForm, UploadFileForm
 from pages.utils import DataMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 
 
 GENRES = [
@@ -107,7 +109,7 @@ class AllBooks(DataMixin, ListView):
 def old_catalog_redirect(request):
     return redirect('genres')
 
-
+@login_required
 def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
@@ -196,6 +198,7 @@ class ShowBook(DataMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['title'] = self.object.title
         context['genre_name'] = self.object.genre
+        context['user'] = self.request.user
         context['comments'] = [
             {'id': 1, 'author': 'BookLover', 'date': '2026-01-15 14:30',
              'text': 'Отличная книга! Очень понравилось обсуждение на форуме.', 'likes': 5},
@@ -232,7 +235,7 @@ class AddBook(DataMixin, FormView):
         return context
 
 
-class CreateBook(DataMixin, CreateView):
+class CreateBook(LoginRequiredMixin, DataMixin, CreateView):
     model = Book
     fields = ['title', 'slug', 'author', 'content', 'year', 'rating', 'is_published', 'cat', 'tags', 'photo']
     template_name = 'pages/add_book.html'
@@ -245,7 +248,7 @@ class CreateBook(DataMixin, CreateView):
         return context
 
 
-class UpdateBook(DataMixin, UpdateView):
+class UpdateBook(LoginRequiredMixin, DataMixin, UpdateView):
     model = Book
     fields = ['title', 'slug', 'author', 'content', 'year', 'rating', 'is_published', 'cat', 'tags', 'photo']
     template_name = 'pages/add_book.html'
@@ -259,7 +262,7 @@ class UpdateBook(DataMixin, UpdateView):
         return context
 
 
-class DeleteBook(DataMixin, DeleteView):
+class DeleteBook(LoginRequiredMixin, DataMixin, DeleteView):
     model = Book
     template_name = 'pages/confirm_delete.html'
     success_url = reverse_lazy('home')

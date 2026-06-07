@@ -9,6 +9,9 @@ admin.site.index_title = "Добро пожаловать в панель упр
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('books.urls')),
+    path('admin/', admin.site.urls),
+    path('', include('books.urls')),
+    path('users/', include('users.urls')),
 ]
 
 handler404 = pages_views.error_404

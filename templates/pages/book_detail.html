@@ -4,7 +4,7 @@
 {% block content %}
     {% if book.photo %}
         <div class="book-photo">
-            <img src="{{ book.photo.url }}" alt="{{ book.title }}" width="480" height="750" style="width: 480px; height: 750px; object-fit: cover; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+            <img src="{{ book.photo.url }}" alt="{{ book.title }}" class="book-detail-cover">
         </div>
     {% endif %}
 
