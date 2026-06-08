@@ -1,7 +1,10 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.conf import settings
+
+User = get_user_model()
 
 
 class PublishedManager(models.Manager):
@@ -48,7 +51,8 @@ class Book(models.Model):
         upload_to='books_photos/%Y/%m/%d/',
         blank=True,
         null=True,
-        verbose_name="Изображение книги")
+        verbose_name="Изображение книги"
+    )
 
     title = models.CharField(max_length=255, verbose_name="Название")
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
@@ -64,6 +68,15 @@ class Book(models.Model):
     cat = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True, related_name='books', verbose_name="Категория")
     tags = models.ManyToManyField(TagPost, blank=True, related_name='books', verbose_name="Теги")
 
+    author_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='books',
+        verbose_name="Добавил на форум"
+    )
+
     objects = models.Manager()
     published = PublishedManager()
 
@@ -74,7 +87,7 @@ class Book(models.Model):
         return reverse('book_detail', kwargs={'book_slug': self.slug})
 
     def save(self, *args, **kwargs):
-        if not self.slug:
+        if not self.slug or self.slug == '':
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
 
@@ -95,3 +108,51 @@ class Profile(models.Model):
     class Meta:
         verbose_name = 'Профиль'
         verbose_name_plural = 'Профили'
+
+
+class Comment(models.Model):
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name="Книга"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Автор"
+    )
+    text = models.TextField(verbose_name="Текст комментария")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    likes_count = models.IntegerField(default=0, verbose_name="Лайки")
+
+    def __str__(self):
+        return f"Комментарий от {self.author.username} к книге {self.book.title}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+
+
+class CommentLike(models.Model):
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name='likes_list',
+        verbose_name="Комментарий"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата лайка")
+
+    class Meta:
+        unique_together = ('comment', 'user')
+        verbose_name = 'Лайк комментария'
+        verbose_name_plural = 'Лайки комментариев'
+
+    def __str__(self):
+        return f"{self.user.username} лайкнул комментарий {self.comment.id}"

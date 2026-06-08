@@ -25,4 +25,11 @@ urlpatterns = [
 
     path('old-catalog/', views.old_catalog_redirect, name='old_catalog'),
     path('about/', views.AboutView.as_view(), name='about'),
+
+    path('book/<slug:book_slug>/comment/', views.add_comment, name='add_comment'),
+    path('comment/<int:comment_id>/like/', views.like_comment, name='like_comment'),
+
+    path('rules/', views.RulesView.as_view(), name='rules'),
+    path('help/', views.HelpView.as_view(), name='help'),
+    path('contacts/', views.ContactsView.as_view(), name='contacts'),
 ]

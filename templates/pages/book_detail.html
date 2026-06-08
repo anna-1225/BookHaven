@@ -9,11 +9,28 @@
     {% endif %}
 
     <div class="book-info">
-        <p><strong>Автор:</strong> {{ book.author }}</p>
+        <p><strong>Автор книги:</strong> {{ book.author }}</p>
         <p><strong>Год издания:</strong> {{ book.year }}</p>
         <p><strong>Жанр:</strong> {{ genre_name }}</p>
         <p><strong>Рейтинг:</strong> {% book_rating_stars book.rating %} ({{ book.rating }})</p>
+        {% if book.author_user %}
+            <p><strong>Добавил на форум:</strong> {{ book.author_user.username }}</p>
+        {% endif %}
     </div>
+
+    {% if user.is_authenticated %}
+        {% if user == book.author_user or user.is_superuser or user.groups.all.0.name == 'Модераторы' %}
+            <div class="action-buttons">
+                <a href="{% url 'edit_book' book.slug %}" class="btn btn-edit">
+                    ✏️ Редактировать книгу
+                </a>
+                <a href="{% url 'delete_book' book.slug %}" class="btn btn-delete"
+                   onclick="return confirm('Вы уверены, что хотите удалить книгу {{ book.title }}? Это действие нельзя отменить.')">
+                    🗑️ Удалить книгу
+                </a>
+            </div>
+        {% endif %}
+    {% endif %}
 
     {% if book.tags.all %}
         <div class="book-tags">
@@ -31,31 +48,42 @@
         {% endautoescape %}
     </div>
 
-    <div class="book-discussions">
-        <h2>Обсуждение книги</h2>
+    <div class="comments-section">
+        <h2>Комментарии ({{ book.comments.all|length }})</h2>
 
-        {% if comments %}
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'add_comment' book.slug %}" class="comment-form">
+                {% csrf_token %}
+                <textarea name="text" placeholder="Ваш комментарий..." rows="3" required></textarea>
+                <button type="submit" class="btn btn-primary">Отправить комментарий</button>
+            </form>
+        {% else %}
+            <p class="login-required">
+                Чтобы оставить комментарий, <a href="{% url 'users:login' %}?next={{ request.path }}">войдите</a> в систему.
+            </p>
+        {% endif %}
+
+        {% if book.comments.all %}
             <div class="comments-list">
-                {% for comment in comments %}
+                {% for comment in book.comments.all %}
                     <div class="comment">
-                        <div class="comment__header">
-                            <span class="comment__author">{{ comment.author }}</span>
-                            <span class="comment__date">{{ comment.date|date:"d.m.Y H:i" }}</span>
+                        <div class="comment-header">
+                            <strong class="comment-author">{{ comment.author.username }}</strong>
+                            <span class="comment-date">{{ comment.created_at|date:"d.m.Y H:i" }}</span>
                         </div>
-                        <div class="comment__content">
+                        <div class="comment-text">
                             {{ comment.text|linebreaks }}
                         </div>
-                        {% if comment.id|divisibleby:"2" %}
-                            <div class="comment__likes">
-                                ❤️ {{ comment.likes }} пользователям понравилось
-                            </div>
-                        {% endif %}
+                        <div class="comment-actions">
+                            <a href="{% url 'like_comment' comment.id %}" class="like-btn {% if user.is_authenticated and user in comment.likes_list.all %}liked{% endif %}">
+                                ❤️ {{ comment.likes_count }}
+                            </a>
+                        </div>
                     </div>
-                    {% if not forloop.last %}<hr class="comment-divider">{% endif %}
                 {% endfor %}
             </div>
         {% else %}
-            <p class="no-comments">Комментариев пока нет.</p>
+            <p class="no-comments">Комментариев пока нет. Будьте первым!</p>
         {% endif %}
     </div>
 

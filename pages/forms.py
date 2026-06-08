@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.text import slugify
 from .models import Book, Category, TagPost
 
 
@@ -18,7 +19,7 @@ class AddBookForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-input'}),
         validators=[validate_russian]
     )
-    slug = forms.SlugField(max_length=255, label="URL (слаг)")
+    slug = forms.SlugField(max_length=255, label="URL (слаг)", required=False)
     author = forms.CharField(max_length=255, label="Автор")
     content = forms.CharField(label="Описание", required=False, widget=forms.Textarea())
     year = forms.IntegerField(label="Год издания", min_value=0, max_value=2026)
@@ -42,16 +43,25 @@ class BookModelForm(forms.ModelForm):
             'is_published': 'Опубликовать',
             'cat': 'Категория',
             'tags': 'Теги',
+            'photo': 'Изображение книги',
         }
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Введите название'}),
-            'slug': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'vlastelin-kolets'}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Введите название',
+                'id': 'id_title'
+            }),
+            'slug': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'vlastelin-kolets',
+                'id': 'id_slug'
+            }),
             'author': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Введите автора'}),
             'content': forms.Textarea(attrs={'class': 'form-textarea', 'rows': 5, 'placeholder': 'Введите описание'}),
             'year': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '1954'}),
             'rating': forms.NumberInput(attrs={'class': 'form-input', 'step': 0.1}),
             'cat': forms.Select(attrs={'class': 'form-select'}),
-            'tags': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'tags': forms.CheckboxSelectMultiple(),
             'photo': forms.ClearableFileInput(attrs={'class': 'form-file'}),
         }
         help_texts = {
@@ -69,6 +79,7 @@ class BookModelForm(forms.ModelForm):
         if year and year > 2026:
             raise ValidationError('Год издания не может быть больше текущего.')
         return year
+
 
 class UploadFileForm(forms.Form):
     file = forms.FileField(

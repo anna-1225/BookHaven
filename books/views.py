@@ -4,30 +4,30 @@ from django.views import View
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.db.models import Count
+from django.utils.text import slugify
 
-from pages.models import Book, Category, TagPost
+from pages.models import Book, Category, TagPost, Comment, CommentLike
 from pages.forms import AddBookForm, BookModelForm, UploadFileForm
 from pages.utils import DataMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .mixins import AuthorRequiredMixin
+from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 
 
-GENRES = [
-    {'id': 1, 'name': 'Фэнтези', 'slug': 'fantasy', 'book_count': 45},
-    {'id': 2, 'name': 'Детектив', 'slug': 'detective', 'book_count': 32},
-    {'id': 3, 'name': 'Классика', 'slug': 'classic', 'book_count': 28},
-    {'id': 4, 'name': 'Роман', 'slug': 'romance', 'book_count': 37},
-]
-
-
 def genres_list(request):
+    categories_with_count = Category.objects.annotate(
+        book_count=Count('books')
+    ).filter(book_count__gt=0)
+
     total_books = Book.published.count()
     categories = Category.objects.all()
     tags = TagPost.objects.all()
 
     context = {
         'title': 'Литературные жанры',
-        'genres': GENRES,
+        'genres': categories_with_count,
         'categories': categories,
         'tags': tags,
         'online_users': 42,
@@ -39,26 +39,23 @@ def genres_list(request):
 
 
 def genre_detail(request, genre_slug):
-    valid_genres = ['fantasy', 'detective', 'classic', 'romance']
-    if genre_slug not in valid_genres:
-        raise Http404("Жанр не найден")
+    category = get_object_or_404(Category, slug=genre_slug)
 
-    genre = next((g for g in GENRES if g['slug'] == genre_slug), None)
-    books = Book.published.filter(genre=genre_slug)
+    books = Book.published.filter(cat=category)
+
     total_books = Book.published.count()
     categories = Category.objects.all()
     tags = TagPost.objects.all()
 
     context = {
-        'title': f'Книги жанра {genre["name"]}',
-        'genre_name': genre['name'],
+        'title': f'Книги жанра {category.name}',
+        'genre_name': category.name,
         'genre_slug': genre_slug,
         'books': books,
-        'genres': GENRES,
         'categories': categories,
         'tags': tags,
         'online_users': 42,
-        'selected_category': genre['id'],
+        'selected_category': category.id,
         'total_books': total_books,
         'total_users': 1234,
     }
@@ -78,7 +75,6 @@ def books_by_year(request, pub_year):
         'title': f'Книги {pub_year} года',
         'pub_year': pub_year,
         'books': books_in_year,
-        'genres': GENRES,
         'categories': categories,
         'tags': tags,
         'online_users': 42,
@@ -100,14 +96,15 @@ class AllBooks(DataMixin, ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Все книги'
-        context['selected_category'] = 0
-        context['total_books'] = Book.published.count()
-        return context
+        return self.get_mixin_context(context,
+                                      title='Все книги',
+                                      selected_category=0
+                                      )
 
 
 def old_catalog_redirect(request):
     return redirect('genres')
+
 
 @login_required
 def upload_file(request):
@@ -143,10 +140,10 @@ class BookHome(DataMixin, ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Главная страница книжного форума BookHaven'
-        context['selected_category'] = 0
-        context['total_books'] = Book.published.count()
-        return context
+        return self.get_mixin_context(context,
+                                      title='Главная страница книжного форума BookHaven',
+                                      selected_category=0
+                                      )
 
 
 class BookCategory(DataMixin, ListView):
@@ -162,9 +159,10 @@ class BookCategory(DataMixin, ListView):
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         category = Category.objects.get(slug=self.kwargs['cat_slug'])
-        context['title'] = f'Книги жанра: {category.name}'
-        context['selected_category'] = category.pk
-        return context
+        return self.get_mixin_context(context,
+                                      title=f'Книги жанра: {category.name}',
+                                      selected_category=category.pk
+                                      )
 
 
 class BookTag(DataMixin, ListView):
@@ -180,9 +178,10 @@ class BookTag(DataMixin, ListView):
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         tag = TagPost.objects.get(slug=self.kwargs['tag_slug'])
-        context['title'] = f'Тег: {tag.tag}'
-        context['selected_category'] = 0
-        return context
+        return self.get_mixin_context(context,
+                                      title=f'Тег: {tag.tag}',
+                                      selected_category=0
+                                      )
 
 
 class ShowBook(DataMixin, DetailView):
@@ -196,18 +195,18 @@ class ShowBook(DataMixin, DetailView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = self.object.title
-        context['genre_name'] = self.object.genre
-        context['user'] = self.request.user
-        context['comments'] = [
-            {'id': 1, 'author': 'BookLover', 'date': '2026-01-15 14:30',
-             'text': 'Отличная книга! Очень понравилось обсуждение на форуме.', 'likes': 5},
-            {'id': 2, 'author': 'Reader123', 'date': '2026-01-16 09:45',
-             'text': 'Очень понравилось обсуждение.', 'likes': 3},
-            {'id': 3, 'author': 'BookWorm', 'date': '2026-01-16 18:20',
-             'text': 'Жду продолжения!', 'likes': 2},
-        ]
-        return context
+
+        if self.object.cat:
+            genre_name = self.object.cat.name
+        else:
+            genre_name = 'Не указан'
+
+        return self.get_mixin_context(context,
+                                      title=self.object.title,
+                                      genre_name=genre_name,
+                                      user=self.request.user,
+                                      comments=self.object.comments.all()
+                                      )
 
 
 class AddBook(DataMixin, FormView):
@@ -231,8 +230,9 @@ class AddBook(DataMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Добавление книги (несвязанная форма)'
-        return context
+        return self.get_mixin_context(context,
+                                      title='Добавление книги (несвязанная форма)'
+                                      )
 
 
 class CreateBook(LoginRequiredMixin, DataMixin, CreateView):
@@ -242,13 +242,33 @@ class CreateBook(LoginRequiredMixin, DataMixin, CreateView):
     success_url = reverse_lazy('home')
     title_page = 'Добавление книги'
 
+    def form_valid(self, form):
+        book = form.save(commit=False)
+        book.author_user = self.request.user
+
+        if not book.slug or book.slug == '':
+            base_slug = slugify(book.title)
+            book.slug = base_slug
+        else:
+            base_slug = book.slug
+
+        counter = 1
+        while Book.objects.filter(slug=book.slug).exclude(id=book.id).exists():
+            book.slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        book.save()
+        form.save_m2m()
+        return redirect(self.success_url)
+
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Добавление книги'
-        return context
+        return self.get_mixin_context(context,
+                                      title='Добавление книги'
+                                      )
 
 
-class UpdateBook(LoginRequiredMixin, DataMixin, UpdateView):
+class UpdateBook(AuthorRequiredMixin, LoginRequiredMixin, DataMixin, UpdateView):
     model = Book
     fields = ['title', 'slug', 'author', 'content', 'year', 'rating', 'is_published', 'cat', 'tags', 'photo']
     template_name = 'pages/add_book.html'
@@ -256,23 +276,71 @@ class UpdateBook(LoginRequiredMixin, DataMixin, UpdateView):
     title_page = 'Редактирование книги'
     slug_url_kwarg = 'slug'
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Редактирование книги'
-        return context
 
-
-class DeleteBook(LoginRequiredMixin, DataMixin, DeleteView):
+class DeleteBook(AuthorRequiredMixin, LoginRequiredMixin, DataMixin, DeleteView):
     model = Book
     template_name = 'pages/confirm_delete.html'
     success_url = reverse_lazy('home')
     title_page = 'Удаление книги'
     slug_url_kwarg = 'slug'
-from django.views.generic import TemplateView
 
 
 class AboutView(TemplateView):
     template_name = 'pages/about.html'
     extra_context = {
         'title': 'О сайте',
+    }
+
+
+@login_required
+def add_comment(request, book_slug):
+    book = get_object_or_404(Book, slug=book_slug)
+    if request.method == 'POST':
+        text = request.POST.get('text')
+        if text:
+            Comment.objects.create(
+                book=book,
+                author=request.user,
+                text=text
+            )
+    return redirect('book_detail', book_slug=book_slug)
+
+
+@login_required
+def like_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    like, created = CommentLike.objects.get_or_create(
+        comment=comment,
+        user=request.user
+    )
+
+    if created:
+        comment.likes_count += 1
+        comment.save()
+    else:
+        like.delete()
+        comment.likes_count -= 1
+        comment.save()
+
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+class RulesView(TemplateView):
+    template_name = 'pages/rules.html'
+    extra_context = {
+        'title': 'Правила форума',
+    }
+
+
+class HelpView(TemplateView):
+    template_name = 'pages/help.html'
+    extra_context = {
+        'title': 'Помощь',
+    }
+
+
+class ContactsView(TemplateView):
+    template_name = 'pages/contacts.html'
+    extra_context = {
+        'title': 'Контакты',
     }

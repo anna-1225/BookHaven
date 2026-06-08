@@ -148,7 +148,6 @@
                     </div>
 
                     <div class="header__info">
-                        Онлайн: {{ online_users|default:"42" }}
                     </div>
                 </div>
             </div>
@@ -193,12 +192,12 @@
                                     <span class="stat-value">{{ total_books }}</span>
                                 </div>
                                 <div class="stat-item">
-                                    <span class="stat-label">Пользователей:</span>
-                                    <span class="stat-value">{{ total_users }}</span>
+                                    <span class="stat-label">Популярный жанр:</span>
+                                    <span class="stat-value">{{ popular_genre }}</span>
                                 </div>
                                 <div class="stat-item">
-                                    <span class="stat-label">Сейчас онлайн:</span>
-                                    <span class="stat-value">{{ online_users }}</span>
+                                    <span class="stat-label">Книг в жанре:</span>
+                                    <span class="stat-value">{{ popular_genre_count }}</span>
                                 </div>
                             </div>
                         </div>
@@ -229,9 +228,9 @@
                     </div>
                     <div class="footer__menu">
                         <a href="{% url 'about' %}">О сайте</a>
-                        <a href="#">Правила</a>
-                        <a href="#">Помощь</a>
-                        <a href="#">Контакты</a>
+                        <a href="{% url 'rules' %}">Правила</a>
+                        <a href="{% url 'help' %}">Помощь</a>
+                        <a href="{% url 'contacts' %}">Контакты</a>
                     </div>
                 </div>
             </div>
